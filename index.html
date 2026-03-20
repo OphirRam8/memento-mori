@@ -314,16 +314,30 @@
   }
 
   /* Legend */
+  .legend-wrapper {
+    text-align: center;
+    margin-bottom: 32px;
+    animation: fadeUp 1.2s 0.6s ease both;
+  }
+
   .legend {
     display: flex;
     justify-content: center;
-    gap: 32px;
-    margin-bottom: 32px;
+    gap: 24px;
     font-size: 12px;
     letter-spacing: 2px;
     color: var(--text-dim);
     text-transform: uppercase;
-    animation: fadeUp 1.2s 0.6s ease both;
+  }
+
+  .legend-basic {
+    margin-bottom: 10px;
+  }
+
+  .legend-categories {
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 11px;
   }
 
   .legend-item {
@@ -716,8 +730,8 @@
   @media (max-width: 900px) {
     .container { padding: 32px 16px; }
 
-    .legend {
-      gap: 12px 20px;
+    .legend-categories {
+      gap: 10px 16px;
       flex-wrap: wrap;
     }
 
@@ -783,17 +797,16 @@
 
     .btn { width: 100%; text-align: center; }
 
-    /* Legend — 2 columns on phone */
-    .legend {
+    /* Legend — tighter on phone */
+    .legend-categories {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px 16px;
+      gap: 6px 12px;
       font-size: 10px;
       letter-spacing: 1px;
     }
 
-    /* Hide the divider on mobile */
-    .legend-item[style*="width:1px"] { display: none; }
+    .legend-basic { font-size: 10px; }
 
     /* Grid — smaller dots for phone */
     .dot {
@@ -908,18 +921,21 @@
     <button class="btn" id="markEventBtn" onclick="openAddEvent()" style="display:none">+ Mark Event</button>
   </div>
 
-  <div class="legend">
-    <div class="legend-item"><div class="legend-dot past"></div><span>Past Week</span></div>
-    <div class="legend-item"><div class="legend-dot future"></div><span>Future Week</span></div>
-    <div class="legend-item" style="width:1px;height:14px;background:#2a2520;margin:0 4px;"></div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--cat-professional);box-shadow:0 0 4px var(--cat-professional)"></div><span style="color:#4a9eff">Professional</span></div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--cat-health);box-shadow:0 0 4px var(--cat-health)"></div><span style="color:#5ec96e">Health</span></div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--cat-relationship);box-shadow:0 0 4px var(--cat-relationship)"></div><span style="color:#e066aa">Relationship</span></div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--cat-family);box-shadow:0 0 4px var(--cat-family)"></div><span style="color:#f5a623">Family</span></div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--cat-personal);box-shadow:0 0 4px var(--cat-personal)"></div><span style="color:#b57aff">Personal</span></div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--cat-travel);box-shadow:0 0 4px var(--cat-travel)"></div><span style="color:#40d0c0">Travel</span></div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--cat-loss);box-shadow:0 0 4px var(--cat-loss)"></div><span style="color:#888">Loss</span></div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--cat-milestone);box-shadow:0 0 4px var(--cat-milestone)"></div><span style="color:#e8c96e">Milestone</span></div>
+  <div class="legend-wrapper">
+    <div class="legend legend-basic">
+      <div class="legend-item"><div class="legend-dot past"></div><span>Past Week</span></div>
+      <div class="legend-item"><div class="legend-dot future"></div><span>Future Week</span></div>
+    </div>
+    <div class="legend legend-categories">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--cat-professional);box-shadow:0 0 4px var(--cat-professional)"></div><span style="color:#4a9eff">Professional</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--cat-health);box-shadow:0 0 4px var(--cat-health)"></div><span style="color:#5ec96e">Health</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--cat-relationship);box-shadow:0 0 4px var(--cat-relationship)"></div><span style="color:#e066aa">Relationship</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--cat-family);box-shadow:0 0 4px var(--cat-family)"></div><span style="color:#f5a623">Family</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--cat-personal);box-shadow:0 0 4px var(--cat-personal)"></div><span style="color:#b57aff">Personal</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--cat-travel);box-shadow:0 0 4px var(--cat-travel)"></div><span style="color:#40d0c0">Travel</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--cat-loss);box-shadow:0 0 4px var(--cat-loss)"></div><span style="color:#888">Loss</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--cat-milestone);box-shadow:0 0 4px var(--cat-milestone)"></div><span style="color:#e8c96e">Milestone</span></div>
+    </div>
   </div>
 
   <div id="setupPrompt" class="setup-prompt">
