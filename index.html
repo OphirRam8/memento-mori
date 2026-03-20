@@ -1728,6 +1728,15 @@
     if (e.key === 'Enter') setDOB();
   });
 
+  // Tap anywhere on background to dismiss tooltip
+  document.addEventListener('click', (e) => {
+    if (!e.target.classList.contains('dot')) {
+      hideTooltip();
+      lastTappedWeek = null;
+      clearTimeout(tapTimeout);
+    }
+  });
+
   // Re-render grid on resize/rotate so dot sizes match
   let resizeTimer;
   window.addEventListener('resize', () => {
