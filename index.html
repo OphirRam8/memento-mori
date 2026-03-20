@@ -843,12 +843,14 @@
       font-size: 12px !important;
     }
 
-    /* Grid — phone-optimized */
+    /* Grid — phone-optimized, fill screen width */
     .dot {
-      width: 5px;
-      height: 5px;
+      /* calc: (100vw - container padding - row label - 51 gaps) / 52 */
+      width: calc((100vw - 32px - 20px - 51px) / 52);
+      height: calc((100vw - 32px - 20px - 51px) / 52);
       border-width: 0.5px;
       pointer-events: none;
+      flex-shrink: 0;
     }
 
     .dot.event {
@@ -860,17 +862,15 @@
 
     .grid-row { margin-bottom: 1px; }
 
-    .row-label { font-size: 7px; width: 18px; padding-right: 2px; }
+    .row-label { font-size: 7px; width: 20px; padding-right: 0; text-align: right; }
 
     .grid-wrapper {
-      overflow-x: auto;
+      overflow-x: hidden;
       padding: 0 0 16px;
-      display: flex;
-      justify-content: center;
     }
 
     #grid {
-      margin: 0 auto;
+      width: 100%;
     }
 
     /* Modal */
@@ -901,7 +901,10 @@
 
     h1 { font-size: 20px; }
 
-    .dot { width: 4px; height: 4px; }
+    .dot {
+      width: calc((100vw - 20px - 20px - 51px) / 52);
+      height: calc((100vw - 20px - 20px - 51px) / 52);
+    }
     .stats-bar { gap: 10px; }
     .stat-num { font-size: 20px; }
 
