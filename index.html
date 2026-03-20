@@ -201,8 +201,6 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    flex-wrap: wrap;
-    justify-content: center;
   }
 
   .dob-display {
@@ -252,9 +250,8 @@
 
   .dob-section {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
   }
 
   label {
@@ -275,6 +272,8 @@
     outline: none;
     transition: border-color 0.2s;
     color-scheme: light;
+    box-sizing: border-box;
+    height: 42px;
   }
 
   input[type="date"]:focus {
@@ -292,6 +291,11 @@
     text-transform: uppercase;
     cursor: pointer;
     transition: all 0.2s;
+    box-sizing: border-box;
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .btn:hover {
@@ -343,6 +347,8 @@
     overflow-x: auto;
     padding-bottom: 16px;
     animation: fadeUp 1.2s 0.7s ease both;
+    display: flex;
+    justify-content: center;
   }
 
   .year-labels {
@@ -906,7 +912,7 @@
         <button class="btn-edit" onclick="editDOB()" title="Edit date of birth">✎ Edit</button>
       </div>
     </div>
-    <button class="btn" onclick="openAddEvent()">+ Mark Event</button>
+    <button class="btn" id="markEventBtn" onclick="openAddEvent()" style="display:none">+ Mark Event</button>
   </div>
 
   <div class="legend">
@@ -1050,6 +1056,7 @@
   function showDOBDisplay() {
     document.getElementById('dobInputState').style.display = 'none';
     document.getElementById('dobDisplayState').style.display = '';
+    document.getElementById('markEventBtn').style.display = '';
     document.getElementById('dobDisplayValue').textContent = dob.toLocaleDateString('en-US', {
       month: 'long', day: 'numeric', year: 'numeric'
     });
