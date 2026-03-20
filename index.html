@@ -526,12 +526,6 @@
     border-color: var(--accent-dim);
   }
 
-  .input-toggle {
-    display: flex;
-    gap: 0;
-    border: 1px solid #3a3228;
-  }
-
   .toggle-btn {
     background: transparent;
     border: none;
@@ -950,16 +944,14 @@
       <input type="text" id="eventName" placeholder="e.g. First Spartan Race, V3 send, Born…">
     </div>
     <div class="form-group">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-        <label style="margin-bottom:0">Date</label>
-        <div class="input-toggle">
-          <button class="toggle-btn active" id="toggleText" onclick="switchDateMode('text')">Type it</button>
-          <button class="toggle-btn" id="togglePicker" onclick="switchDateMode('picker')">Pick it</button>
-        </div>
+      <label>Date</label>
+      <div style="display:flex; gap:0; margin-bottom:10px;">
+        <input type="text" id="eventDateText" placeholder="e.g. March 2019, June 15 1995, 2003…" autocomplete="off" style="flex:1; border-right:none;">
+        <button class="toggle-btn active" id="toggleText" onclick="switchDateMode('text')" style="border:1px solid #d0ccc4; border-right:none;">Type</button>
+        <button class="toggle-btn" id="togglePicker" onclick="switchDateMode('picker')" style="border:1px solid #d0ccc4;">Pick</button>
       </div>
-      <input type="text" id="eventDateText" placeholder="e.g. March 2019, June 15 1995, 2003…" autocomplete="off">
-      <input type="date" id="eventDatePicker" style="display:none; width:100%; background:var(--surface); border:1px solid #3a3228; color:var(--text); padding:12px 16px; font-family:'Crimson Pro',serif; font-size:16px; outline:none; color-scheme:dark;">
-      <div id="dateParsePreview" style="margin-top:6px; font-size:12px; font-style:italic; color:var(--accent-dim); min-height:16px;"></div>
+      <input type="date" id="eventDatePicker" style="display:none; width:100%; background:#f8f6f2; border:1px solid #d0ccc4; color:var(--text); padding:12px 16px; font-family:'Crimson Pro',serif; font-size:16px; outline:none; color-scheme:light;">
+      <div id="dateParsePreview" style="font-size:12px; font-style:italic; color:var(--accent-dim); min-height:16px;"></div>
     </div>
     <div class="form-group">
       <label>Area of Life</label>
@@ -1219,7 +1211,7 @@
     dateMode = mode;
     document.getElementById('toggleText').classList.toggle('active', mode === 'text');
     document.getElementById('togglePicker').classList.toggle('active', mode === 'picker');
-    document.getElementById('eventDateText').style.display = mode === 'text' ? '' : 'none';
+    document.getElementById('eventDateText').parentElement.style.display = mode === 'text' ? 'flex' : 'none';
     document.getElementById('eventDatePicker').style.display = mode === 'picker' ? '' : 'none';
     document.getElementById('dateParsePreview').textContent = '';
   }
