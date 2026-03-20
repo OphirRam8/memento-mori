@@ -354,20 +354,6 @@
     margin: 0 auto;
   }
 
-  .year-labels {
-    display: flex;
-    margin-bottom: 4px;
-    padding-left: 40px;
-  }
-
-  .year-labels span {
-    font-family: 'Cinzel', serif;
-    font-size: 9px;
-    color: var(--text-dim);
-    letter-spacing: 1px;
-    text-align: left;
-    padding-left: 2px;
-  }
 
   .grid-row {
     display: flex;
@@ -814,9 +800,6 @@
 
     .row-label { font-size: 7px; width: 24px; padding-right: 3px; }
 
-    .year-labels { padding-left: 28px; }
-    .year-labels span { font-size: 7px; }
-
     /* Modal */
     .modal { padding: 24px 20px; }
     .modal h2 { font-size: 14px; letter-spacing: 3px; }
@@ -1122,27 +1105,9 @@
     renderEvents();
   }
 
-  function getDotSize() {
-    // Match CSS: 9px dot + 2px gap on desktop, 6px + 1px on mobile
-    return window.innerWidth <= 600 ? 7 : 11;
-  }
-
   function buildGrid(currentWeek) {
     const grid = document.getElementById('grid');
     grid.innerHTML = '';
-    const dotUnit = getDotSize();
-
-    // Year header row
-    const headerRow = document.createElement('div');
-    headerRow.className = 'year-labels';
-    for (let y = 0; y < TOTAL_YEARS; y += 10) {
-      const span = document.createElement('span');
-      span.style.width = (10 * 52 * dotUnit) + 'px';
-      span.style.minWidth = (10 * 52 * dotUnit) + 'px';
-      span.textContent = 'Age ' + y;
-      headerRow.appendChild(span);
-    }
-    grid.appendChild(headerRow);
 
     // Rows = one per year
     for (let year = 0; year < TOTAL_YEARS; year++) {
@@ -1151,7 +1116,7 @@
 
       const label = document.createElement('div');
       label.className = 'row-label';
-      if (year % 5 === 0) label.textContent = year;
+      if (year % 10 === 0) label.textContent = year;
       row.appendChild(label);
 
       const dotsRow = document.createElement('div');
