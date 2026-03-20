@@ -1330,7 +1330,23 @@
 
   function maybeAutoSignIn() {
     if (!gapiLoaded || !gisLoaded) return;
-    // If we had a session before, try silent sign-in
+
+    // Restore token from sessionStorage if still valid
+    const savedToken = sessionStorage.getItem('mementoMoriToken');
+    const savedExpiry = sessionStorage.getItem('mementoMoriTokenExpiry');
+    if (savedToken && savedExpiry && Date.now() < parseInt(savedExpiry)) {
+      accessToken = savedToken;
+      gapi.client.setToken({ access_token: accessToken });
+      const userName = localStorage.getItem('mementoMoriGoogleUser') || 'Connected';
+      document.getElementById('userName').textContent = userName;
+      document.getElementById('signedOutState').style.display = 'none';
+      document.getElementById('signedInState').style.display = 'flex';
+      setSyncStatus('connected', 'Signed in');
+      loadFromDrive();
+      return;
+    }
+
+    // Otherwise try silent sign-in if we had a session before
     if (localStorage.getItem('mementoMoriGoogleUser')) {
       tokenClient.requestAccessToken({ prompt: '' });
     }
@@ -1351,6 +1367,8 @@
     accessToken = null;
     driveFileId = null;
     localStorage.removeItem('mementoMoriGoogleUser');
+    sessionStorage.removeItem('mementoMoriToken');
+    sessionStorage.removeItem('mementoMoriTokenExpiry');
     document.getElementById('signedOutState').style.display = '';
     document.getElementById('signedInState').style.display = 'none';
     setSyncStatus('idle', 'Signed out');
@@ -1365,6 +1383,10 @@
     }
     accessToken = resp.access_token;
     gapi.client.setToken({ access_token: accessToken });
+
+    // Persist token for page refreshes (expires in ~1 hour)
+    sessionStorage.setItem('mementoMoriToken', accessToken);
+    sessionStorage.setItem('mementoMoriTokenExpiry', String(Date.now() + (resp.expires_in || 3600) * 1000));
 
     // Get user info for display
     try {
