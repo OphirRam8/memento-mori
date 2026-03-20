@@ -471,6 +471,8 @@
     width: 100%;
     max-width: 420px;
     animation: modalIn 0.3s ease;
+    box-sizing: border-box;
+    overflow: hidden;
   }
 
   @keyframes modalIn {
@@ -509,10 +511,14 @@
     text-transform: uppercase;
   }
 
+  .modal input[type="text"],
+  .modal input[type="date"],
+  .modal select,
   .form-group input[type="text"],
   .form-group input[type="date"],
   .form-group select {
     width: 100%;
+    max-width: 100%;
     background: #f8f6f2;
     border: 1px solid #d0ccc4;
     color: var(--text);
