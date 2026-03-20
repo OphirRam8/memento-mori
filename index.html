@@ -1331,9 +1331,9 @@
   function maybeAutoSignIn() {
     if (!gapiLoaded || !gisLoaded) return;
 
-    // Restore token from sessionStorage if still valid
-    const savedToken = sessionStorage.getItem('mementoMoriToken');
-    const savedExpiry = sessionStorage.getItem('mementoMoriTokenExpiry');
+    // Restore token from localStorage if still valid
+    const savedToken = localStorage.getItem('mementoMoriToken');
+    const savedExpiry = localStorage.getItem('mementoMoriTokenExpiry');
     if (savedToken && savedExpiry && Date.now() < parseInt(savedExpiry)) {
       accessToken = savedToken;
       gapi.client.setToken({ access_token: accessToken });
@@ -1346,8 +1346,9 @@
       return;
     }
 
-    // Otherwise try silent sign-in if we had a session before
+    // Token expired or missing — try silent refresh if user previously signed in
     if (localStorage.getItem('mementoMoriGoogleUser')) {
+      setSyncStatus('syncing', 'Reconnecting…');
       tokenClient.requestAccessToken({ prompt: '' });
     }
   }
@@ -1357,7 +1358,8 @@
       setSyncStatus('error', 'Google API still loading…');
       return;
     }
-    tokenClient.requestAccessToken({ prompt: 'consent' });
+    // First try without forcing consent (works if user already authorized)
+    tokenClient.requestAccessToken({ prompt: '' });
   }
 
   function handleSignOut() {
@@ -1367,26 +1369,37 @@
     accessToken = null;
     driveFileId = null;
     localStorage.removeItem('mementoMoriGoogleUser');
-    sessionStorage.removeItem('mementoMoriToken');
-    sessionStorage.removeItem('mementoMoriTokenExpiry');
+    localStorage.removeItem('mementoMoriToken');
+    localStorage.removeItem('mementoMoriTokenExpiry');
     document.getElementById('signedOutState').style.display = '';
     document.getElementById('signedInState').style.display = 'none';
     setSyncStatus('idle', 'Signed out');
   }
 
+  let signInAttempted = false;
+
   async function onTokenResponse(resp) {
     if (resp.error) {
-      // Silent sign-in failed — that's fine, user can click Sign In
-      if (resp.error === 'interaction_required' || resp.error === 'consent_required') return;
-      setSyncStatus('error', 'Sign-in failed');
+      // Silent sign-in failed — try with account picker, but only once
+      if (!signInAttempted && (resp.error === 'interaction_required' || resp.error === 'consent_required')) {
+        signInAttempted = true;
+        tokenClient.requestAccessToken({ prompt: 'consent' });
+        return;
+      }
+      signInAttempted = false;
+      // If auto-reconnect failed, just show signed out quietly
+      if (localStorage.getItem('mementoMoriGoogleUser') && !accessToken) {
+        setSyncStatus('idle', 'Session expired — sign in again');
+      }
       return;
     }
+    signInAttempted = false;
     accessToken = resp.access_token;
     gapi.client.setToken({ access_token: accessToken });
 
-    // Persist token for page refreshes (expires in ~1 hour)
-    sessionStorage.setItem('mementoMoriToken', accessToken);
-    sessionStorage.setItem('mementoMoriTokenExpiry', String(Date.now() + (resp.expires_in || 3600) * 1000));
+    // Persist token across page loads (expires in ~1 hour, auto-refreshes)
+    localStorage.setItem('mementoMoriToken', accessToken);
+    localStorage.setItem('mementoMoriTokenExpiry', String(Date.now() + (resp.expires_in || 3600) * 1000));
 
     // Get user info for display
     try {
@@ -1404,6 +1417,12 @@
     document.getElementById('signedOutState').style.display = 'none';
     document.getElementById('signedInState').style.display = 'flex';
     setSyncStatus('connected', 'Signed in');
+
+    // Auto-refresh token 5 minutes before expiry
+    const expiresIn = (resp.expires_in || 3600) * 1000;
+    setTimeout(() => {
+      if (accessToken) tokenClient.requestAccessToken({ prompt: '' });
+    }, Math.max(expiresIn - 300000, 60000));
 
     // Load from Drive
     await loadFromDrive();
