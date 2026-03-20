@@ -555,6 +555,48 @@
   }
 
 
+  /* Dictation */
+  .btn-dictate {
+    background: transparent;
+    border: 1px solid #d0ccc4;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    line-height: 1;
+  }
+
+  .btn-dictate:hover {
+    border-color: var(--accent-dim);
+  }
+
+  .btn-dictate.listening {
+    background: #ffe0e0;
+    border-color: #e05c3a;
+    animation: dictPulse 1.2s ease-in-out infinite;
+  }
+
+  @keyframes dictPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(224, 92, 58, 0.3); }
+    50% { box-shadow: 0 0 0 6px rgba(224, 92, 58, 0); }
+  }
+
+  .dictation-hint {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-style: italic;
+    margin-top: 6px;
+    padding: 6px 10px;
+    background: #f0ede8;
+    border-radius: 4px;
+  }
+
   /* Category selector */
   .category-grid {
     display: grid;
@@ -1044,8 +1086,14 @@
     <h2 id="modalTitle">Mark an Event</h2>
     <div class="modal-week-info" id="modalWeekInfo"></div>
     <div class="form-group">
-      <label>Event Name</label>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+        <label style="margin:0">Event Name</label>
+        <button class="btn-dictate" id="dictateBtn" onclick="toggleDictation()" title="Dictate event">🎙</button>
+      </div>
       <input type="text" id="eventName" placeholder="e.g. First Spartan Race, V3 send, Born…">
+      <div class="dictation-hint" id="dictationHint" style="display:none">
+        <span id="dictationStatus">Listening… say event name and date</span>
+      </div>
     </div>
     <div class="form-group">
       <label>Date</label>
@@ -1347,6 +1395,128 @@
     }
 
     document.getElementById('modalOverlay').classList.add('open');
+  }
+
+  // ── Dictation (Web Speech API) ─────────────────────────────
+  let recognition = null;
+  let isListening = false;
+
+  function toggleDictation() {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert('Speech recognition is not supported in this browser.');
+      return;
+    }
+
+    if (isListening) {
+      stopDictation();
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      isListening = true;
+      document.getElementById('dictateBtn').classList.add('listening');
+      document.getElementById('dictationHint').style.display = 'block';
+      document.getElementById('dictationStatus').textContent = 'Listening… say event name and date';
+    };
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      document.getElementById('dictationStatus').textContent = `Heard: "${transcript}"`;
+      parseDictation(transcript);
+    };
+
+    recognition.onerror = (event) => {
+      document.getElementById('dictationStatus').textContent = 'Could not hear you. Try again.';
+      stopDictation();
+    };
+
+    recognition.onend = () => {
+      stopDictation();
+    };
+
+    recognition.start();
+  }
+
+  function stopDictation() {
+    isListening = false;
+    document.getElementById('dictateBtn').classList.remove('listening');
+    if (recognition) {
+      try { recognition.stop(); } catch(e) {}
+      recognition = null;
+    }
+  }
+
+  function parseDictation(text) {
+    // Try to extract a date from the spoken text
+    // Common patterns: "First Spartan Race March 15 2024", "Born on August 21, 1994"
+    const datePatterns = [
+      // "January 15 2024" or "January 15, 2024"
+      /\b(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2}),?\s*(\d{4})\b/i,
+      // "15 January 2024"
+      /\b(\d{1,2})\s+(january|february|march|april|may|june|july|august|september|october|november|december),?\s*(\d{4})\b/i,
+      // "1/15/2024" or "01-15-2024"
+      /\b(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})\b/,
+    ];
+
+    const months = {
+      january: '01', february: '02', march: '03', april: '04',
+      may: '05', june: '06', july: '07', august: '08',
+      september: '09', october: '10', november: '11', december: '12'
+    };
+
+    let eventName = text;
+    let dateStr = null;
+
+    // Try pattern 1: Month Day Year
+    let match = text.match(datePatterns[0]);
+    if (match) {
+      const month = months[match[1].toLowerCase()];
+      const day = match[2].padStart(2, '0');
+      dateStr = `${match[3]}-${month}-${day}`;
+      eventName = text.replace(match[0], '').trim();
+    }
+
+    // Try pattern 2: Day Month Year
+    if (!dateStr) {
+      match = text.match(datePatterns[1]);
+      if (match) {
+        const month = months[match[2].toLowerCase()];
+        const day = match[1].padStart(2, '0');
+        dateStr = `${match[3]}-${month}-${day}`;
+        eventName = text.replace(match[0], '').trim();
+      }
+    }
+
+    // Try pattern 3: numeric date
+    if (!dateStr) {
+      match = text.match(datePatterns[2]);
+      if (match) {
+        dateStr = `${match[3]}-${match[1].padStart(2, '0')}-${match[2].padStart(2, '0')}`;
+        eventName = text.replace(match[0], '').trim();
+      }
+    }
+
+    // Clean up event name — remove filler words at boundaries
+    eventName = eventName.replace(/^(on|at|the|,|\s)+/i, '').replace(/(,|\s)+$/g, '').trim();
+
+    // Capitalize first letter
+    if (eventName) {
+      eventName = eventName.charAt(0).toUpperCase() + eventName.slice(1);
+    }
+
+    document.getElementById('eventName').value = eventName;
+    if (dateStr) {
+      document.getElementById('eventDatePicker').value = dateStr;
+      document.getElementById('dictationStatus').textContent = `✓ Got: "${eventName}" on ${dateStr}`;
+    } else {
+      document.getElementById('dictationStatus').textContent = `✓ Got: "${eventName}" — please set date manually`;
+    }
   }
 
   function getModalDate() {
