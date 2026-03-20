@@ -491,6 +491,7 @@
     animation: modalIn 0.3s ease;
     box-sizing: border-box;
     overflow: hidden;
+    overflow-wrap: break-word;
   }
 
   @keyframes modalIn {
@@ -548,6 +549,10 @@
     color-scheme: light;
     box-sizing: border-box;
     height: 44px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border-radius: 0;
   }
 
   .form-group input:focus, .form-group select:focus {
