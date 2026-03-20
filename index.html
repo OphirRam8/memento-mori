@@ -1091,13 +1091,13 @@
     <h2 id="modalTitle">Mark an Event</h2>
     <div class="modal-week-info" id="modalWeekInfo"></div>
     <div class="form-group">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
-        <label style="margin:0">Event Name</label>
-        <button class="btn-dictate" id="dictateBtn" onclick="toggleDictation()" title="Dictate event">🎙</button>
+      <label>Event Name</label>
+      <div style="position:relative">
+        <input type="text" id="eventName" placeholder="e.g. First Spartan Race, V3 send, Born…" style="padding-right:40px">
+        <button class="btn-dictate" id="dictateBtn" onclick="focusForDictation()" title="Dictate event" style="position:absolute;right:6px;top:50%;transform:translateY(-50%)">🎙</button>
       </div>
-      <input type="text" id="eventName" placeholder="e.g. First Spartan Race, V3 send, Born…">
       <div class="dictation-hint" id="dictationHint" style="display:none">
-        <span id="dictationStatus">Listening… say event name and date</span>
+        <span id="dictationStatus"></span>
       </div>
     </div>
     <div class="form-group">
@@ -1402,74 +1402,26 @@
     document.getElementById('modalOverlay').classList.add('open');
   }
 
-  // ── Dictation (Web Speech API) ─────────────────────────────
-  let recognition = null;
-  let isListening = false;
+  // ── Dictation ──────────────────────────────────────────────
+  function focusForDictation() {
+    const nameInput = document.getElementById('eventName');
+    nameInput.value = '';
+    nameInput.focus();
+    document.getElementById('dictationHint').style.display = 'block';
+    document.getElementById('dictationStatus').textContent =
+      'Tap the 🎙 on your keyboard, then say the event name and date';
+    document.getElementById('dictateBtn').classList.add('listening');
 
-  const hasSpeechAPI = ('webkitSpeechRecognition' in window) || ('SpeechRecognition' in window);
-
-  function toggleDictation() {
-    if (hasSpeechAPI) {
-      // Use Web Speech API (works in Chrome)
-      if (isListening) {
-        stopDictation();
-        return;
+    // Watch for input to auto-parse date from dictated text
+    const onDone = () => {
+      const val = nameInput.value.trim();
+      if (val) {
+        parseDictation(val);
       }
-
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      recognition = new SpeechRecognition();
-      recognition.lang = 'en-US';
-      recognition.interimResults = false;
-      recognition.maxAlternatives = 1;
-
-      recognition.onstart = () => {
-        isListening = true;
-        document.getElementById('dictateBtn').classList.add('listening');
-        document.getElementById('dictationHint').style.display = 'block';
-        document.getElementById('dictationStatus').textContent = 'Listening… say event name and date';
-      };
-
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        document.getElementById('dictationStatus').textContent = `Heard: "${transcript}"`;
-        parseDictation(transcript);
-      };
-
-      recognition.onerror = (event) => {
-        document.getElementById('dictationStatus').textContent = 'Could not hear you. Try again.';
-        stopDictation();
-      };
-
-      recognition.onend = () => {
-        stopDictation();
-      };
-
-      recognition.start();
-    } else {
-      // Fallback for Safari/iOS — use keyboard dictation
-      const nameInput = document.getElementById('eventName');
-      nameInput.focus();
-      document.getElementById('dictationHint').style.display = 'block';
-      document.getElementById('dictationStatus').textContent =
-        'Tap the 🎙 on your keyboard to dictate. Say the event name, then set the date below.';
-
-      // Watch for input changes to parse dictation
-      const handler = () => {
-        const val = nameInput.value.trim();
-        if (val) parseDictation(val);
-        nameInput.removeEventListener('blur', handler);
-      };
-      nameInput.addEventListener('blur', handler);
-    }
-  }
-
-  function stopDictation() {
-    isListening = false;
-    document.getElementById('dictateBtn').classList.remove('listening');
-    if (recognition) {
-      try { recognition.stop(); } catch(e) {}
-      recognition = null;
-    }
+      document.getElementById('dictateBtn').classList.remove('listening');
+      nameInput.removeEventListener('blur', onDone);
+    };
+    nameInput.addEventListener('blur', onDone);
   }
 
   function parseDictation(text) {
