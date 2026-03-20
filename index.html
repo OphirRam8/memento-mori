@@ -191,10 +191,18 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 24px;
+    gap: 16px;
     margin-bottom: 40px;
     flex-wrap: wrap;
     animation: fadeUp 1.2s 0.5s ease both;
+  }
+
+  .dob-input-state {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
   }
 
   .dob-display {
@@ -244,8 +252,9 @@
 
   .dob-section {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 12px;
+    gap: 6px;
   }
 
   label {
@@ -347,7 +356,6 @@
     font-size: 9px;
     color: var(--text-dim);
     letter-spacing: 1px;
-    width: calc(52 * 11px);
     text-align: left;
     padding-left: 2px;
   }
@@ -699,6 +707,138 @@
     color: var(--text-dim);
     margin-bottom: 24px;
   }
+
+  /* ── Responsive ─────────────────────────────────────────── */
+
+  /* Tablet & small desktop */
+  @media (max-width: 900px) {
+    .container { padding: 32px 16px; }
+
+    .legend {
+      gap: 12px 20px;
+      flex-wrap: wrap;
+    }
+
+    .stats-bar { gap: 24px; }
+
+    .events-list {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Phone */
+  @media (max-width: 600px) {
+    .container { padding: 20px 12px; }
+
+    header { margin-bottom: 32px; }
+
+    .latin { font-size: 9px; letter-spacing: 4px; }
+
+    .subtitle { font-size: 15px; }
+
+    /* Sync bar */
+    .sync-bar {
+      padding: 8px 12px;
+      gap: 10px;
+    }
+
+    .sync-status { font-size: 9px; }
+
+    .btn-sync { padding: 5px 10px; font-size: 8px; }
+
+    /* Stats */
+    .stats-bar {
+      gap: 16px;
+      padding: 14px 8px;
+      margin-bottom: 28px;
+    }
+
+    .stat-num { font-size: 20px; }
+    .stat-label { font-size: 9px; letter-spacing: 2px; }
+
+    /* Controls */
+    .controls {
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .dob-input-state {
+      flex-direction: column;
+    }
+
+    .dob-section { width: 100%; }
+
+    .dob-section input[type="date"] {
+      width: 100%;
+    }
+
+    .dob-display {
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 14px;
+    }
+
+    .btn { width: 100%; text-align: center; }
+
+    /* Legend — 2 columns on phone */
+    .legend {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 16px;
+      font-size: 10px;
+      letter-spacing: 1px;
+    }
+
+    /* Hide the divider on mobile */
+    .legend-item[style*="width:1px"] { display: none; }
+
+    /* Grid — smaller dots for phone */
+    .dot {
+      width: 6px;
+      height: 6px;
+    }
+
+    .dots-row { gap: 1px; }
+
+    .grid-row { margin-bottom: 1px; }
+
+    .row-label { font-size: 7px; width: 24px; padding-right: 3px; }
+
+    .year-labels { padding-left: 28px; }
+    .year-labels span { font-size: 7px; }
+
+    /* Modal */
+    .modal { padding: 24px 20px; }
+    .modal h2 { font-size: 14px; letter-spacing: 3px; }
+
+    .category-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Events list */
+    .events-section { margin-top: 40px; }
+
+    .event-card { padding: 12px 14px; }
+    .event-name { font-size: 14px; }
+
+    /* Footer */
+    footer { margin-top: 40px; padding-top: 20px; font-size: 13px; }
+  }
+
+  /* Very small phones */
+  @media (max-width: 380px) {
+    .dot { width: 5px; height: 5px; }
+    .stats-bar { gap: 10px; flex-wrap: wrap; }
+    .stat-num { font-size: 18px; }
+  }
+
+  /* Touch device: disable hover scale on dots (causes jank on scroll) */
+  @media (hover: none) {
+    .dot:hover {
+      transform: none;
+    }
+  }
 </style>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://apis.google.com/js/api.js" async defer></script>
@@ -972,17 +1112,23 @@
     renderEvents();
   }
 
+  function getDotSize() {
+    // Match CSS: 9px dot + 2px gap on desktop, 6px + 1px on mobile
+    return window.innerWidth <= 600 ? 7 : 11;
+  }
+
   function buildGrid(currentWeek) {
     const grid = document.getElementById('grid');
     grid.innerHTML = '';
+    const dotUnit = getDotSize();
 
     // Year header row
     const headerRow = document.createElement('div');
     headerRow.className = 'year-labels';
     for (let y = 0; y < TOTAL_YEARS; y += 10) {
       const span = document.createElement('span');
-      span.style.width = (10 * 52 * 11) + 'px';
-      span.style.minWidth = (10 * 52 * 11) + 'px';
+      span.style.width = (10 * 52 * dotUnit) + 'px';
+      span.style.minWidth = (10 * 52 * dotUnit) + 'px';
       span.textContent = 'Age ' + y;
       headerRow.appendChild(span);
     }
@@ -1494,6 +1640,13 @@
 
   document.getElementById('dobInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') setDOB();
+  });
+
+  // Re-render grid on resize/rotate so dot sizes match
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => { if (dob) render(); }, 250);
   });
 
   loadState();
