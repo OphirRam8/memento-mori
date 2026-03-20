@@ -265,7 +265,7 @@
     background: var(--surface);
     border: 1px solid #c0bdb8;
     color: var(--text);
-    padding: 10px 16px;
+    padding: 6px 16px;
     font-family: 'Crimson Pro', serif;
     font-size: 16px;
     cursor: pointer;
@@ -273,7 +273,7 @@
     transition: border-color 0.2s;
     color-scheme: light;
     box-sizing: border-box;
-    height: 42px;
+    height: 36px;
   }
 
   input[type="date"]:focus {
@@ -284,7 +284,7 @@
     background: transparent;
     border: 1px solid var(--accent-dim);
     color: var(--accent);
-    padding: 10px 24px;
+    padding: 6px 24px;
     font-family: 'Cinzel', serif;
     font-size: 11px;
     letter-spacing: 3px;
@@ -292,7 +292,7 @@
     cursor: pointer;
     transition: all 0.2s;
     box-sizing: border-box;
-    height: 42px;
+    height: 36px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -344,6 +344,14 @@
     display: flex;
     align-items: center;
     gap: 8px;
+  }
+
+  .legend-left {
+    justify-content: flex-end;
+  }
+
+  .legend-right {
+    justify-content: flex-start;
   }
 
   .legend-dot {
@@ -801,16 +809,23 @@
     .legend-categories {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px 20px;
+      gap: 8px 16px;
       font-size: 11px;
       letter-spacing: 1.5px;
-      justify-items: start;
       max-width: 320px;
       margin: 0 auto;
     }
 
     .legend-item {
       gap: 6px;
+    }
+
+    .legend-left {
+      justify-content: flex-end;
+    }
+
+    .legend-right {
+      justify-content: flex-start;
     }
 
     .legend-dot {
@@ -966,14 +981,14 @@
       <div class="legend-item"><div class="legend-dot future"></div><span>Future Week</span></div>
     </div>
     <div class="legend legend-categories">
-      <div class="legend-item"><div class="legend-dot" style="background:var(--cat-professional);box-shadow:0 0 4px var(--cat-professional)"></div><span style="color:#4a9eff">Professional</span></div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--cat-health);box-shadow:0 0 4px var(--cat-health)"></div><span style="color:#5ec96e">Health</span></div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--cat-relationship);box-shadow:0 0 4px var(--cat-relationship)"></div><span style="color:#e066aa">Relationship</span></div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--cat-family);box-shadow:0 0 4px var(--cat-family)"></div><span style="color:#f5a623">Family</span></div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--cat-personal);box-shadow:0 0 4px var(--cat-personal)"></div><span style="color:#b57aff">Personal</span></div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--cat-travel);box-shadow:0 0 4px var(--cat-travel)"></div><span style="color:#40d0c0">Travel</span></div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--cat-loss);box-shadow:0 0 4px var(--cat-loss)"></div><span style="color:#888">Loss</span></div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--cat-milestone);box-shadow:0 0 4px var(--cat-milestone)"></div><span style="color:#e8c96e">Milestone</span></div>
+      <div class="legend-item legend-left"><span style="color:#4a9eff">Professional</span><div class="legend-dot" style="background:var(--cat-professional);box-shadow:0 0 4px var(--cat-professional)"></div></div>
+      <div class="legend-item legend-right"><div class="legend-dot" style="background:var(--cat-health);box-shadow:0 0 4px var(--cat-health)"></div><span style="color:#5ec96e">Health</span></div>
+      <div class="legend-item legend-left"><span style="color:#e066aa">Relationship</span><div class="legend-dot" style="background:var(--cat-relationship);box-shadow:0 0 4px var(--cat-relationship)"></div></div>
+      <div class="legend-item legend-right"><div class="legend-dot" style="background:var(--cat-family);box-shadow:0 0 4px var(--cat-family)"></div><span style="color:#f5a623">Family</span></div>
+      <div class="legend-item legend-left"><span style="color:#b57aff">Personal</span><div class="legend-dot" style="background:var(--cat-personal);box-shadow:0 0 4px var(--cat-personal)"></div></div>
+      <div class="legend-item legend-right"><div class="legend-dot" style="background:var(--cat-travel);box-shadow:0 0 4px var(--cat-travel)"></div><span style="color:#40d0c0">Travel</span></div>
+      <div class="legend-item legend-left"><span style="color:#888">Loss</span><div class="legend-dot" style="background:var(--cat-loss);box-shadow:0 0 4px var(--cat-loss)"></div></div>
+      <div class="legend-item legend-right"><div class="legend-dot" style="background:var(--cat-milestone);box-shadow:0 0 4px var(--cat-milestone)"></div><span style="color:#e8c96e">Milestone</span></div>
     </div>
   </div>
 
