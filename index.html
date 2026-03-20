@@ -1406,46 +1406,61 @@
   let recognition = null;
   let isListening = false;
 
+  const hasSpeechAPI = ('webkitSpeechRecognition' in window) || ('SpeechRecognition' in window);
+
   function toggleDictation() {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      alert('Speech recognition is not supported in this browser.');
-      return;
-    }
+    if (hasSpeechAPI) {
+      // Use Web Speech API (works in Chrome)
+      if (isListening) {
+        stopDictation();
+        return;
+      }
 
-    if (isListening) {
-      stopDictation();
-      return;
-    }
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
 
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
+      recognition.onstart = () => {
+        isListening = true;
+        document.getElementById('dictateBtn').classList.add('listening');
+        document.getElementById('dictationHint').style.display = 'block';
+        document.getElementById('dictationStatus').textContent = 'Listening… say event name and date';
+      };
 
-    recognition.onstart = () => {
-      isListening = true;
-      document.getElementById('dictateBtn').classList.add('listening');
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById('dictationStatus').textContent = `Heard: "${transcript}"`;
+        parseDictation(transcript);
+      };
+
+      recognition.onerror = (event) => {
+        document.getElementById('dictationStatus').textContent = 'Could not hear you. Try again.';
+        stopDictation();
+      };
+
+      recognition.onend = () => {
+        stopDictation();
+      };
+
+      recognition.start();
+    } else {
+      // Fallback for Safari/iOS — use keyboard dictation
+      const nameInput = document.getElementById('eventName');
+      nameInput.focus();
       document.getElementById('dictationHint').style.display = 'block';
-      document.getElementById('dictationStatus').textContent = 'Listening… say event name and date';
-    };
+      document.getElementById('dictationStatus').textContent =
+        'Tap the 🎙 on your keyboard to dictate. Say the event name, then set the date below.';
 
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      document.getElementById('dictationStatus').textContent = `Heard: "${transcript}"`;
-      parseDictation(transcript);
-    };
-
-    recognition.onerror = (event) => {
-      document.getElementById('dictationStatus').textContent = 'Could not hear you. Try again.';
-      stopDictation();
-    };
-
-    recognition.onend = () => {
-      stopDictation();
-    };
-
-    recognition.start();
+      // Watch for input changes to parse dictation
+      const handler = () => {
+        const val = nameInput.value.trim();
+        if (val) parseDictation(val);
+        nameInput.removeEventListener('blur', handler);
+      };
+      nameInput.addEventListener('blur', handler);
+    }
   }
 
   function stopDictation() {
