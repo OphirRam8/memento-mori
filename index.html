@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memento Mori</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f8f6f2;
+    --surface: #ffffff;
+    --dot-empty: #d8d4cc;
+    --dot-filled: #1a1814;
+    --dot-filled-glow: #2a2620;
+    --accent: #1a1814;
+    --accent-dim: #6a6560;
+    --text: #1a1814;
+    --text-dim: #8a8680;
+    --ring-color: #e05c3a;
+    --ring-glow: #ff8060;
+
+    /* Category colors — kept vivid, they pop on white */
+    --cat-professional: #1a6eff;
+    --cat-health:       #18b04a;
+    --cat-relationship: #d4207a;
+    --cat-family:       #e07800;
+    --cat-personal:     #8040e0;
+    --cat-travel:       #00a898;
+    --cat-loss:         #888888;
+    --cat-milestone:    #c09000;
+  }
+
+  /* Backup Bar */
+  .sync-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 10px 20px;
+    background: #eeece8;
+    border-bottom: 1px solid #d0ccc4;
+    font-size: 12px;
+    letter-spacing: 1px;
+    flex-wrap: wrap;
+  }
+
+  .sync-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-dim);
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .sync-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #c0bdb8;
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+
+  .sync-dot.connected { background: #5ec96e; box-shadow: 0 0 6px #5ec96e; }
+  .sync-dot.syncing   { background: #4a9eff; animation: pulse-sync 1s infinite; }
+  .sync-dot.error     { background: #e05c3a; }
+
+  @keyframes pulse-sync {
+    0%, 100% { opacity: 1; } 50% { opacity: 0.3; }
+  }
+
+  .btn-sync {
+    background: transparent;
+    border: 1px solid #c0bdb8;
+    color: var(--text-dim);
+    padding: 6px 16px;
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-sync:hover { border-color: var(--accent-dim); color: var(--accent); }
+  .btn-sync.primary { border-color: var(--accent-dim); color: var(--accent); }
+  .btn-sync.primary:hover { background: var(--accent); color: var(--bg); }
+  .btn-sync:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .sync-user {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-style: italic;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Crimson Pro', Georgia, serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.15;
+  }
+
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 48px 32px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 56px;
+    animation: fadeDown 1.2s ease both;
+  }
+
+  .latin {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 6px;
+    color: var(--accent-dim);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  h1 {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(28px, 5vw, 52px);
+    font-weight: 900;
+    color: var(--accent);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+
+  .subtitle {
+    font-size: 17px;
+    font-style: italic;
+    color: var(--text-dim);
+    font-weight: 300;
+  }
+
+  .stats-bar {
+    display: flex;
+    justify-content: center;
+    gap: 48px;
+    margin-bottom: 48px;
+    padding: 20px;
+    border-top: 1px solid #d0ccc4;
+    border-bottom: 1px solid #d0ccc4;
+    animation: fadeUp 1.2s 0.3s ease both;
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-num {
+    font-family: 'Cinzel', serif;
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--accent);
+    display: block;
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-top: 6px;
+    display: block;
+  }
+
+  .controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+    animation: fadeUp 1.2s 0.5s ease both;
+  }
+
+  .dob-display {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 20px;
+    border: 1px solid #d0ccc4;
+    background: var(--surface);
+  }
+
+  .dob-display-label {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .dob-display-value {
+    font-family: 'Cinzel', serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: 1px;
+  }
+
+  .btn-edit {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    padding: 4px 10px;
+    border: 1px solid #d0ccc4;
+    transition: all 0.2s;
+    margin-left: 4px;
+  }
+
+  .btn-edit:hover {
+    color: var(--text);
+    border-color: var(--accent-dim);
+  }
+
+  .dob-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  label {
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  input[type="date"] {
+    background: var(--surface);
+    border: 1px solid #c0bdb8;
+    color: var(--text);
+    padding: 10px 16px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 16px;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+    color-scheme: light;
+  }
+
+  input[type="date"]:focus {
+    border-color: var(--accent-dim);
+  }
+
+  .btn {
+    background: transparent;
+    border: 1px solid var(--accent-dim);
+    color: var(--accent);
+    padding: 10px 24px;
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn:hover {
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  .btn-danger {
+    border-color: #5a3028;
+    color: #c06050;
+  }
+
+  .btn-danger:hover {
+    background: #c06050;
+    color: var(--bg);
+  }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    margin-bottom: 32px;
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    animation: fadeUp 1.2s 0.6s ease both;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .legend-dot.past { background: var(--dot-filled); }
+  .legend-dot.future { background: var(--dot-empty); border: 1px solid #3a3228; }
+  .legend-dot.event { background: var(--dot-filled); box-shadow: 0 0 0 2px var(--ring-color); }
+
+  /* Grid */
+  .grid-wrapper {
+    overflow-x: auto;
+    padding-bottom: 16px;
+    animation: fadeUp 1.2s 0.7s ease both;
+  }
+
+  .year-labels {
+    display: flex;
+    margin-bottom: 4px;
+    padding-left: 40px;
+  }
+
+  .year-labels span {
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    width: calc(52 * 11px);
+    text-align: left;
+    padding-left: 2px;
+  }
+
+  .grid-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2px;
+  }
+
+  .row-label {
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    color: var(--text-dim);
+    width: 36px;
+    text-align: right;
+    padding-right: 6px;
+    flex-shrink: 0;
+  }
+
+  .dots-row {
+    display: flex;
+    gap: 2px;
+  }
+
+  .dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--dot-empty);
+    border: 1px solid #c8c4bc;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    position: relative;
+  }
+
+  .dot:hover {
+    transform: scale(1.6);
+    z-index: 10;
+  }
+
+  .dot.past {
+    background: var(--dot-filled);
+    border-color: var(--dot-filled);
+    box-shadow: 0 0 2px rgba(26, 24, 20, 0.2);
+  }
+
+  .dot.current {
+    background: var(--dot-filled-glow);
+    border-color: var(--dot-filled-glow);
+    box-shadow: 0 0 8px rgba(26, 24, 20, 0.5), 0 0 16px rgba(26, 24, 20, 0.25);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .dot.event {
+    background: var(--event-ring, #e05c3a) !important;
+    border-color: var(--event-ring, #e05c3a) !important;
+    box-shadow: 0 0 5px var(--event-ring, #e05c3a);
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 8px rgba(26, 24, 20, 0.5), 0 0 16px rgba(26, 24, 20, 0.25); }
+    50% { box-shadow: 0 0 14px rgba(26, 24, 20, 0.8), 0 0 28px rgba(26, 24, 20, 0.45); }
+  }
+
+  /* Tooltip */
+  .tooltip {
+    position: fixed;
+    background: #ffffff;
+    border: 1px solid #d0ccc4;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    padding: 10px 14px;
+    font-size: 13px;
+    pointer-events: none;
+    z-index: 9999;
+    max-width: 220px;
+    display: none;
+    line-height: 1.5;
+  }
+
+  .tooltip.visible { display: block; }
+
+  .tooltip-week {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    color: var(--accent-dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .tooltip-event {
+    color: var(--ring-glow);
+    font-style: italic;
+  }
+
+  /* Event Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(248, 246, 242, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    display: none;
+    padding: 20px;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: #ffffff;
+    border: 1px solid #d0ccc4;
+    box-shadow: 0 8px 48px rgba(0,0,0,0.14);
+    padding: 40px;
+    width: 100%;
+    max-width: 480px;
+    animation: modalIn 0.3s ease;
+  }
+
+  @keyframes modalIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .modal h2 {
+    font-family: 'Cinzel', serif;
+    font-size: 16px;
+    letter-spacing: 4px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .modal-week-info {
+    font-size: 13px;
+    color: var(--text-dim);
+    font-style: italic;
+    margin-bottom: 28px;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  .form-group input[type="text"],
+  .form-group input[type="date"],
+  .form-group select {
+    width: 100%;
+    background: #f8f6f2;
+    border: 1px solid #d0ccc4;
+    color: var(--text);
+    padding: 12px 16px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.2s;
+    color-scheme: light;
+  }
+
+  .form-group input:focus, .form-group select:focus {
+    border-color: var(--accent-dim);
+  }
+
+  .input-toggle {
+    display: flex;
+    gap: 0;
+    border: 1px solid #3a3228;
+  }
+
+  .toggle-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    padding: 5px 14px;
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .toggle-btn.active {
+    background: var(--accent-dim);
+    color: var(--bg);
+  }
+
+  .toggle-btn:hover:not(.active) {
+    color: var(--accent);
+  }
+
+  /* Category selector */
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .cat-btn {
+    background: var(--surface);
+    border: 1px solid #2a2520;
+    color: var(--text-dim);
+    padding: 9px 6px;
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.18s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  .cat-btn .cat-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .cat-btn:hover {
+    border-color: #4a4030;
+    color: var(--text);
+  }
+
+  .cat-btn.selected {
+    border-color: var(--cat-color);
+    color: var(--cat-color);
+    background: rgba(255,255,255,0.04);
+    box-shadow: inset 0 0 0 1px var(--cat-color);
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 28px;
+  }
+
+  .events-section {
+    margin-top: 60px;
+    animation: fadeUp 1.2s 0.9s ease both;
+  }
+
+  .events-section h2 {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    letter-spacing: 5px;
+    color: var(--accent-dim);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+
+  .events-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .event-card {
+    background: var(--surface);
+    border: 1px solid #2a2520;
+    border-left: 3px solid var(--ring-color);
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    transition: border-color 0.2s;
+  }
+
+  .event-card:hover { border-color: #4a3830; border-left-color: var(--ring-glow); }
+
+  .event-name {
+    font-size: 16px;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .event-date {
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+
+  .event-delete {
+    background: none;
+    border: none;
+    color: #5a3a30;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 0 0 0 12px;
+    transition: color 0.2s;
+    flex-shrink: 0;
+  }
+
+  .event-delete:hover { color: var(--ring-glow); }
+
+  footer {
+    text-align: center;
+    margin-top: 64px;
+    padding-top: 32px;
+    border-top: 1px solid #1e1c18;
+    font-style: italic;
+    color: var(--text-dim);
+    font-size: 15px;
+    animation: fadeUp 1.2s 1s ease both;
+  }
+
+  footer em {
+    color: var(--accent-dim);
+  }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .setup-prompt {
+    text-align: center;
+    padding: 60px 20px;
+  }
+
+  .setup-prompt p {
+    font-size: 18px;
+    font-style: italic;
+    color: var(--text-dim);
+    margin-bottom: 24px;
+  }
+</style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://apis.google.com/js/api.js" async defer></script>
+</head>
+<body>
+
+<!-- Sync Bar -->
+<div class="sync-bar">
+  <div class="sync-status">
+    <div class="sync-dot" id="syncDot"></div>
+    <span id="syncStatusText">Not signed in</span>
+  </div>
+  <!-- Signed-out state -->
+  <div id="signedOutState">
+    <button class="btn-sync primary" onclick="handleSignIn()">Sign in with Google</button>
+  </div>
+  <!-- Signed-in state -->
+  <div id="signedInState" style="display:none;align-items:center;gap:12px">
+    <span class="sync-user" id="userName" style="font-size:11px;color:var(--text-dim);font-style:italic;"></span>
+    <button class="btn-sync" onclick="forceSaveToCloud()">↑ Save Now</button>
+    <button class="btn-sync" onclick="handleSignOut()" style="border-color:#d0ccc4;color:#a08070;">Sign Out</button>
+  </div>
+</div>
+
+<div class="container">
+  <header>
+    <div class="latin">Memento Mori</div>
+    <h1>Time Given, Not Owed</h1>
+    <p class="subtitle">Every dot is a week. Every filled dot is gone.</p>
+  </header>
+
+  <div class="stats-bar" id="statsBar" style="display:none">
+    <div class="stat">
+      <span class="stat-num" id="statAge">—</span>
+      <span class="stat-label">Years Lived</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num" id="statWeeksLived">—</span>
+      <span class="stat-label">Weeks Behind</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num" id="statWeeksLeft">—</span>
+      <span class="stat-label">Weeks Ahead</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num" id="statPercent">—</span>
+      <span class="stat-label">Life Elapsed</span>
+    </div>
+  </div>
+
+  <div class="controls">
+    <!-- Input state (shown before DOB is set) -->
+    <div class="dob-input-state" id="dobInputState">
+      <div class="dob-section">
+        <label for="dobInput">Date of Birth</label>
+        <input type="date" id="dobInput">
+      </div>
+      <button class="btn" onclick="setDOB()">Set Date</button>
+    </div>
+    <!-- Display state (shown after DOB is set) -->
+    <div class="dob-display-state" id="dobDisplayState" style="display:none">
+      <div class="dob-display">
+        <span class="dob-display-label">Born</span>
+        <span class="dob-display-value" id="dobDisplayValue">—</span>
+        <button class="btn-edit" onclick="editDOB()" title="Edit date of birth">✎ Edit</button>
+      </div>
+    </div>
+    <button class="btn" onclick="openAddEvent()">+ Mark Event</button>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot past"></div><span>Past Week</span></div>
+    <div class="legend-item"><div class="legend-dot future"></div><span>Future Week</span></div>
+    <div class="legend-item" style="width:1px;height:14px;background:#2a2520;margin:0 4px;"></div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--cat-professional);box-shadow:0 0 4px var(--cat-professional)"></div><span style="color:#4a9eff">Professional</span></div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--cat-health);box-shadow:0 0 4px var(--cat-health)"></div><span style="color:#5ec96e">Health</span></div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--cat-relationship);box-shadow:0 0 4px var(--cat-relationship)"></div><span style="color:#e066aa">Relationship</span></div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--cat-family);box-shadow:0 0 4px var(--cat-family)"></div><span style="color:#f5a623">Family</span></div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--cat-personal);box-shadow:0 0 4px var(--cat-personal)"></div><span style="color:#b57aff">Personal</span></div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--cat-travel);box-shadow:0 0 4px var(--cat-travel)"></div><span style="color:#40d0c0">Travel</span></div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--cat-loss);box-shadow:0 0 4px var(--cat-loss)"></div><span style="color:#888">Loss</span></div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--cat-milestone);box-shadow:0 0 4px var(--cat-milestone)"></div><span style="color:#e8c96e">Milestone</span></div>
+  </div>
+
+  <div id="setupPrompt" class="setup-prompt">
+    <p>Enter your date of birth to begin.</p>
+    <p style="font-size:13px; color: #3a3228; letter-spacing:2px; text-transform:uppercase;">120 years · 6,240 weeks · one life</p>
+  </div>
+
+  <div class="grid-wrapper" id="gridWrapper" style="display:none">
+    <div id="grid"></div>
+  </div>
+
+  <div class="events-section" id="eventsSection" style="display:none">
+    <h2>Marked Events</h2>
+    <div class="events-list" id="eventsList"></div>
+  </div>
+
+  <footer>
+    <em>"Time Given, Not Owed."</em>
+  </footer>
+</div>
+
+<!-- Tooltip -->
+<div class="tooltip" id="tooltip">
+  <div class="tooltip-week" id="tooltipWeek"></div>
+  <div id="tooltipContent"></div>
+</div>
+
+<!-- Event Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h2 id="modalTitle">Mark an Event</h2>
+    <div class="modal-week-info" id="modalWeekInfo"></div>
+    <div class="form-group">
+      <label>Event Name</label>
+      <input type="text" id="eventName" placeholder="e.g. First Spartan Race, V3 send, Born…">
+    </div>
+    <div class="form-group">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <label style="margin-bottom:0">Date</label>
+        <div class="input-toggle">
+          <button class="toggle-btn active" id="toggleText" onclick="switchDateMode('text')">Type it</button>
+          <button class="toggle-btn" id="togglePicker" onclick="switchDateMode('picker')">Pick it</button>
+        </div>
+      </div>
+      <input type="text" id="eventDateText" placeholder="e.g. March 2019, June 15 1995, 2003…" autocomplete="off">
+      <input type="date" id="eventDatePicker" style="display:none; width:100%; background:var(--surface); border:1px solid #3a3228; color:var(--text); padding:12px 16px; font-family:'Crimson Pro',serif; font-size:16px; outline:none; color-scheme:dark;">
+      <div id="dateParsePreview" style="margin-top:6px; font-size:12px; font-style:italic; color:var(--accent-dim); min-height:16px;"></div>
+    </div>
+    <div class="form-group">
+      <label>Area of Life</label>
+      <div class="category-grid" id="categoryGrid">
+        <button class="cat-btn" data-cat="professional" style="--cat-color:var(--cat-professional)" onclick="selectCategory('professional')"><div class="cat-dot" style="background:var(--cat-professional)"></div>Professional</button>
+        <button class="cat-btn" data-cat="health" style="--cat-color:var(--cat-health)" onclick="selectCategory('health')"><div class="cat-dot" style="background:var(--cat-health)"></div>Health</button>
+        <button class="cat-btn" data-cat="relationship" style="--cat-color:var(--cat-relationship)" onclick="selectCategory('relationship')"><div class="cat-dot" style="background:var(--cat-relationship)"></div>Relationship</button>
+        <button class="cat-btn" data-cat="family" style="--cat-color:var(--cat-family)" onclick="selectCategory('family')"><div class="cat-dot" style="background:var(--cat-family)"></div>Family</button>
+        <button class="cat-btn" data-cat="personal" style="--cat-color:var(--cat-personal)" onclick="selectCategory('personal')"><div class="cat-dot" style="background:var(--cat-personal)"></div>Personal</button>
+        <button class="cat-btn" data-cat="travel" style="--cat-color:var(--cat-travel)" onclick="selectCategory('travel')"><div class="cat-dot" style="background:var(--cat-travel)"></div>Travel</button>
+        <button class="cat-btn" data-cat="loss" style="--cat-color:var(--cat-loss)" onclick="selectCategory('loss')"><div class="cat-dot" style="background:var(--cat-loss)"></div>Loss</button>
+        <button class="cat-btn" data-cat="milestone" style="--cat-color:var(--cat-milestone)" onclick="selectCategory('milestone')"><div class="cat-dot" style="background:var(--cat-milestone)"></div>Milestone</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="saveEvent()">Mark It</button>
+      <button class="btn btn-danger" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const TOTAL_YEARS = 120;
+  const TOTAL_WEEKS = TOTAL_YEARS * 52;
+  const WEEKS_PER_ROW = 52;
+
+  let dob = null;
+  let events = {};
+  let clickedWeek = null;
+  let selectedCategory = null;
+
+  const CATEGORIES = {
+    professional: { label: 'Professional', color: '#4a9eff' },
+    health:       { label: 'Health',        color: '#5ec96e' },
+    relationship: { label: 'Relationship',  color: '#e066aa' },
+    family:       { label: 'Family',        color: '#f5a623' },
+    personal:     { label: 'Personal',      color: '#b57aff' },
+    travel:       { label: 'Travel',        color: '#40d0c0' },
+    loss:         { label: 'Loss',          color: '#888888' },
+    milestone:    { label: 'Milestone',     color: '#e8c96e' },
+  };
+
+  function getCatColor(cat) {
+    return CATEGORIES[cat] ? CATEGORIES[cat].color : '#e05c3a';
+  }
+
+  function selectCategory(cat) {
+    selectedCategory = cat;
+    document.querySelectorAll('.cat-btn').forEach(btn => {
+      btn.classList.toggle('selected', btn.dataset.cat === cat);
+    });
+  }
+
+  // Load from localStorage
+  function loadState() {
+    try {
+      const saved = localStorage.getItem('mementoMori');
+      if (saved) {
+        const data = JSON.parse(saved);
+        dob = data.dob ? new Date(data.dob + 'T00:00:00') : null;
+        events = data.events || {};
+        if (dob) {
+          document.getElementById('dobInput').value = data.dob;
+          showDOBDisplay();
+          render();
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load saved state:', e);
+    }
+  }
+
+  // Escape HTML to prevent XSS in user-entered event names
+  function escapeHTML(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function showDOBDisplay() {
+    document.getElementById('dobInputState').style.display = 'none';
+    document.getElementById('dobDisplayState').style.display = '';
+    document.getElementById('dobDisplayValue').textContent = dob.toLocaleDateString('en-US', {
+      month: 'long', day: 'numeric', year: 'numeric'
+    });
+  }
+
+  function editDOB() {
+    document.getElementById('dobInputState').style.display = '';
+    document.getElementById('dobDisplayState').style.display = 'none';
+    document.getElementById('dobInput').value = dob.toISOString().split('T')[0];
+    document.getElementById('dobInput').focus();
+  }
+
+  function setDOB() {
+    const val = document.getElementById('dobInput').value;
+    if (!val) return;
+    dob = new Date(val + 'T00:00:00');
+    saveState();
+    showDOBDisplay();
+    render();
+  }
+
+  function getWeekIndex(date) {
+    const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+    return Math.floor((date - dob) / msPerWeek);
+  }
+
+  function weekToDateRange(weekIdx) {
+    const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+    const start = new Date(dob.getTime() + weekIdx * msPerWeek);
+    const end = new Date(start.getTime() + msPerWeek - 1);
+    return { start, end };
+  }
+
+  function formatDate(d) {
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  function render() {
+    if (!dob) return;
+
+    const now = new Date();
+    const currentWeek = getWeekIndex(now);
+
+    // Stats
+    const yearsLived = ((now - dob) / (365.25 * 24 * 60 * 60 * 1000));
+    const weeksLived = Math.max(0, currentWeek);
+    const weeksLeft = TOTAL_WEEKS - weeksLived;
+    const pct = ((weeksLived / TOTAL_WEEKS) * 100).toFixed(1);
+
+    document.getElementById('statAge').textContent = Math.floor(yearsLived);
+    document.getElementById('statWeeksLived').textContent = weeksLived.toLocaleString();
+    document.getElementById('statWeeksLeft').textContent = Math.max(0, weeksLeft).toLocaleString();
+    document.getElementById('statPercent').textContent = pct + '%';
+
+    document.getElementById('statsBar').style.display = 'flex';
+    document.getElementById('setupPrompt').style.display = 'none';
+    document.getElementById('gridWrapper').style.display = 'block';
+
+    buildGrid(currentWeek);
+    renderEvents();
+  }
+
+  function buildGrid(currentWeek) {
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '';
+
+    // Year header row
+    const headerRow = document.createElement('div');
+    headerRow.className = 'year-labels';
+    for (let y = 0; y < TOTAL_YEARS; y += 10) {
+      const span = document.createElement('span');
+      span.style.width = (10 * 52 * 11) + 'px';
+      span.style.minWidth = (10 * 52 * 11) + 'px';
+      span.textContent = 'Age ' + y;
+      headerRow.appendChild(span);
+    }
+    grid.appendChild(headerRow);
+
+    // Rows = one per year
+    for (let year = 0; year < TOTAL_YEARS; year++) {
+      const row = document.createElement('div');
+      row.className = 'grid-row';
+
+      const label = document.createElement('div');
+      label.className = 'row-label';
+      if (year % 5 === 0) label.textContent = year;
+      row.appendChild(label);
+
+      const dotsRow = document.createElement('div');
+      dotsRow.className = 'dots-row';
+
+      for (let w = 0; w < WEEKS_PER_ROW; w++) {
+        const weekIdx = year * WEEKS_PER_ROW + w;
+        const dot = document.createElement('div');
+        dot.className = 'dot';
+
+        if (weekIdx < currentWeek) dot.classList.add('past');
+        else if (weekIdx === currentWeek) dot.classList.add('current', 'past');
+
+        if (events[weekIdx]) {
+          dot.classList.add('event');
+          const color = getCatColor(events[weekIdx].category);
+          dot.style.setProperty('--event-ring', color);
+        }
+
+        dot.addEventListener('mouseenter', (e) => showTooltip(e, weekIdx));
+        dot.addEventListener('mousemove', (e) => moveTooltip(e));
+        dot.addEventListener('mouseleave', hideTooltip);
+        dot.addEventListener('click', () => onDotClick(weekIdx));
+
+        dotsRow.appendChild(dot);
+      }
+
+      row.appendChild(dotsRow);
+      grid.appendChild(row);
+    }
+  }
+
+  function showTooltip(e, weekIdx) {
+    const tooltip = document.getElementById('tooltip');
+    const { start, end } = weekToDateRange(weekIdx);
+    const year = Math.floor(weekIdx / 52);
+    const week = weekIdx % 52 + 1;
+
+    document.getElementById('tooltipWeek').textContent = `Year ${year} · Week ${week}`;
+
+    let content = `<div style="color:var(--text-dim);font-size:13px">${formatDate(start)} — ${formatDate(end)}</div>`;
+    if (events[weekIdx]) {
+      const ev = events[weekIdx];
+      const color = getCatColor(ev.category);
+      const catLabel = ev.category ? CATEGORIES[ev.category].label : '';
+      content += `<div class="tooltip-event" style="margin-top:6px;color:${color}">${escapeHTML(ev.name)}</div>`;
+      if (catLabel) content += `<div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${color};opacity:0.7;margin-top:2px">${catLabel}</div>`;
+    }
+    document.getElementById('tooltipContent').innerHTML = content;
+
+    tooltip.classList.add('visible');
+    moveTooltip(e);
+  }
+
+  function moveTooltip(e) {
+    const tooltip = document.getElementById('tooltip');
+    const x = e.clientX + 14;
+    const y = e.clientY - 10;
+    tooltip.style.left = Math.min(x, window.innerWidth - 240) + 'px';
+    tooltip.style.top = y + 'px';
+  }
+
+  function hideTooltip() {
+    document.getElementById('tooltip').classList.remove('visible');
+  }
+
+  function onDotClick(weekIdx) {
+    clickedWeek = weekIdx;
+    const { start, end } = weekToDateRange(weekIdx);
+    const year = Math.floor(weekIdx / 52);
+    const week = weekIdx % 52 + 1;
+
+    document.getElementById('modalTitle').textContent = events[weekIdx] ? 'Edit Event' : 'Mark an Event';
+    document.getElementById('modalWeekInfo').textContent = `Year ${year}, Week ${week} · ${formatDate(start)}`;
+
+    if (events[weekIdx]) {
+      document.getElementById('eventName').value = events[weekIdx].name;
+      document.getElementById('eventDateText').value = events[weekIdx].date || '';
+      document.getElementById('eventDatePicker').value = events[weekIdx].date || '';
+      if (events[weekIdx].date) {
+        document.getElementById('dateParsePreview').textContent = '→ ' + formatDate(new Date(events[weekIdx].date + 'T00:00:00'));
+      }
+      selectCategory(events[weekIdx].category || null);
+    } else {
+      document.getElementById('eventName').value = '';
+      const startStr = start.toISOString().split('T')[0];
+      document.getElementById('eventDateText').value = startStr;
+      document.getElementById('eventDatePicker').value = startStr;
+      document.getElementById('dateParsePreview').textContent = '→ ' + formatDate(start);
+      selectCategory(null);
+    }
+    switchDateMode('text');
+
+    document.getElementById('modalOverlay').classList.add('open');
+  }
+
+  let dateMode = 'text';
+
+  function switchDateMode(mode) {
+    dateMode = mode;
+    document.getElementById('toggleText').classList.toggle('active', mode === 'text');
+    document.getElementById('togglePicker').classList.toggle('active', mode === 'picker');
+    document.getElementById('eventDateText').style.display = mode === 'text' ? '' : 'none';
+    document.getElementById('eventDatePicker').style.display = mode === 'picker' ? '' : 'none';
+    document.getElementById('dateParsePreview').textContent = '';
+  }
+
+  function parseFuzzyDate(str) {
+    if (!str) return null;
+    str = str.trim();
+
+    // Try native parse first
+    const direct = new Date(str);
+    if (!isNaN(direct)) return direct;
+
+    // Year only e.g. "1995"
+    if (/^\d{4}$/.test(str)) return new Date(parseInt(str), 0, 1);
+
+    // Month Year e.g. "March 2019", "Mar 2019", "03/2019"
+    const monthYear = str.match(/^([a-zA-Z]+)\s+(\d{4})$/);
+    if (monthYear) {
+      const d = new Date(`${monthYear[1]} 1, ${monthYear[2]}`);
+      if (!isNaN(d)) return d;
+    }
+
+    const slashMonthYear = str.match(/^(\d{1,2})\/(\d{4})$/);
+    if (slashMonthYear) return new Date(parseInt(slashMonthYear[2]), parseInt(slashMonthYear[1]) - 1, 1);
+
+    // Day Month Year e.g. "15 June 1995"
+    const dmy = str.match(/^(\d{1,2})\s+([a-zA-Z]+)\s+(\d{4})$/);
+    if (dmy) {
+      const d = new Date(`${dmy[2]} ${dmy[1]}, ${dmy[3]}`);
+      if (!isNaN(d)) return d;
+    }
+
+    return null;
+  }
+
+  function getModalDate() {
+    if (dateMode === 'picker') {
+      const val = document.getElementById('eventDatePicker').value;
+      return val ? new Date(val + 'T00:00:00') : null;
+    } else {
+      return parseFuzzyDate(document.getElementById('eventDateText').value);
+    }
+  }
+
+  function getModalDateString() {
+    if (dateMode === 'picker') return document.getElementById('eventDatePicker').value;
+    const d = parseFuzzyDate(document.getElementById('eventDateText').value);
+    return d ? d.toISOString().split('T')[0] : '';
+  }
+
+  document.getElementById('eventDateText').addEventListener('input', () => {
+      const d = parseFuzzyDate(document.getElementById('eventDateText').value);
+      const preview = document.getElementById('dateParsePreview');
+      if (d && !isNaN(d)) {
+        preview.textContent = '→ ' + formatDate(d);
+        preview.style.color = 'var(--accent-dim)';
+      } else if (document.getElementById('eventDateText').value.trim()) {
+        preview.textContent = 'Unrecognized format';
+        preview.style.color = '#c06050';
+      } else {
+        preview.textContent = '';
+      }
+    });
+
+  function openAddEvent() {
+    clickedWeek = null;
+    document.getElementById('modalTitle').textContent = 'Mark an Event';
+    document.getElementById('modalWeekInfo').textContent = 'Enter a date to mark a week';
+    document.getElementById('eventName').value = '';
+    document.getElementById('eventDateText').value = '';
+    document.getElementById('eventDatePicker').value = '';
+    document.getElementById('dateParsePreview').textContent = '';
+    selectCategory(null);
+    switchDateMode('text');
+    document.getElementById('modalOverlay').classList.add('open');
+  }
+
+  function saveEvent() {
+    const name = document.getElementById('eventName').value.trim();
+    if (!name) return;
+
+    let targetWeek = clickedWeek;
+    let dateStr = getModalDateString();
+
+    if (targetWeek === null) {
+      const d = getModalDate();
+      if (!d || isNaN(d)) {
+        alert('Please enter a valid date.');
+        return;
+      }
+      targetWeek = getWeekIndex(d);
+    }
+
+    if (targetWeek === null || targetWeek < 0 || targetWeek >= TOTAL_WEEKS) {
+      alert('Date is outside the 120-year range.');
+      return;
+    }
+
+    events[targetWeek] = { name, date: dateStr, category: selectedCategory };
+    saveState();
+    closeModal();
+    render();
+  }
+
+  function deleteEvent(weekIdx) {
+    delete events[weekIdx];
+    saveState();
+    render();
+  }
+
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+    clickedWeek = null;
+  }
+
+  function renderEvents() {
+    const list = document.getElementById('eventsList');
+    const section = document.getElementById('eventsSection');
+    const keys = Object.keys(events).sort((a, b) => a - b);
+
+    if (keys.length === 0) {
+      section.style.display = 'none';
+      return;
+    }
+
+    section.style.display = 'block';
+    list.innerHTML = '';
+
+    keys.forEach(weekIdx => {
+      const ev = events[weekIdx];
+      const year = Math.floor(weekIdx / 52);
+      const color = getCatColor(ev.category);
+      const catLabel = ev.category ? CATEGORIES[ev.category].label : '';
+      const card = document.createElement('div');
+      card.className = 'event-card';
+      card.style.borderLeftColor = color;
+      card.innerHTML = `
+        <div>
+          <div class="event-name">${escapeHTML(ev.name)}</div>
+          <div class="event-date">
+            ${catLabel ? `<span style="color:${color};letter-spacing:2px;text-transform:uppercase;font-size:10px;margin-right:8px">${catLabel}</span>` : ''}
+            Year ${year}${ev.date ? ' · ' + formatDate(new Date(ev.date + 'T00:00:00')) : ''}
+          </div>
+        </div>
+        <button class="event-delete" onclick="deleteEvent(${weekIdx})">×</button>
+      `;
+      list.appendChild(card);
+    });
+  }
+
+  // ── Google Drive Sync ────────────────────────────────────────
+  // Replace this with your OAuth 2.0 Client ID from Google Cloud Console
+  const CLIENT_ID = '357584213793-8ffconfhvne6ukdkn739mb1sfi6csnou.apps.googleusercontent.com';
+  const SCOPES = 'https://www.googleapis.com/auth/drive.appdata';
+  const SAVE_FILENAME = 'memento-mori-save.json';
+
+  let accessToken = null;
+  let driveFileId = null;
+  let saveTimeout = null;
+  let gapiLoaded = false;
+  let gisLoaded = false;
+  let tokenClient = null;
+
+  function setSyncStatus(state, text) {
+    const dot = document.getElementById('syncDot');
+    dot.className = 'sync-dot' + (state !== 'idle' ? ' ' + state : '');
+    document.getElementById('syncStatusText').textContent = text;
+  }
+
+  // Wait for both Google libs to load, then init
+  function onGapiLoaded() {
+    gapi.load('client', async () => {
+      await gapi.client.init({});
+      await gapi.client.load('drive', 'v3');
+      gapiLoaded = true;
+      maybeAutoSignIn();
+    });
+  }
+
+  function onGisLoaded() {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      callback: onTokenResponse,
+    });
+    gisLoaded = true;
+    maybeAutoSignIn();
+  }
+
+  function maybeAutoSignIn() {
+    if (!gapiLoaded || !gisLoaded) return;
+    // If we had a session before, try silent sign-in
+    if (localStorage.getItem('mementoMoriGoogleUser')) {
+      tokenClient.requestAccessToken({ prompt: '' });
+    }
+  }
+
+  function handleSignIn() {
+    if (!gisLoaded) {
+      setSyncStatus('error', 'Google API still loading…');
+      return;
+    }
+    tokenClient.requestAccessToken({ prompt: 'consent' });
+  }
+
+  function handleSignOut() {
+    if (accessToken) {
+      google.accounts.oauth2.revoke(accessToken);
+    }
+    accessToken = null;
+    driveFileId = null;
+    localStorage.removeItem('mementoMoriGoogleUser');
+    document.getElementById('signedOutState').style.display = '';
+    document.getElementById('signedInState').style.display = 'none';
+    setSyncStatus('idle', 'Signed out');
+  }
+
+  async function onTokenResponse(resp) {
+    if (resp.error) {
+      // Silent sign-in failed — that's fine, user can click Sign In
+      if (resp.error === 'interaction_required' || resp.error === 'consent_required') return;
+      setSyncStatus('error', 'Sign-in failed');
+      return;
+    }
+    accessToken = resp.access_token;
+    gapi.client.setToken({ access_token: accessToken });
+
+    // Get user info for display
+    try {
+      const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { 'Authorization': 'Bearer ' + accessToken }
+      });
+      const user = await userInfo.json();
+      const displayName = user.email || user.name || 'Connected';
+      document.getElementById('userName').textContent = displayName;
+      localStorage.setItem('mementoMoriGoogleUser', displayName);
+    } catch (e) {
+      document.getElementById('userName').textContent = 'Connected';
+    }
+
+    document.getElementById('signedOutState').style.display = 'none';
+    document.getElementById('signedInState').style.display = 'flex';
+    setSyncStatus('connected', 'Signed in');
+
+    // Load from Drive
+    await loadFromDrive();
+  }
+
+  async function findDriveFile() {
+    try {
+      const resp = await gapi.client.drive.files.list({
+        spaces: 'appDataFolder',
+        q: `name = '${SAVE_FILENAME}' and trashed = false`,
+        fields: 'files(id, name, modifiedTime)',
+        pageSize: 1,
+      });
+      const files = resp.result.files;
+      return files && files.length > 0 ? files[0].id : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async function loadFromDrive() {
+    setSyncStatus('syncing', 'Loading from Drive…');
+    try {
+      driveFileId = await findDriveFile();
+      if (!driveFileId) {
+        setSyncStatus('connected', 'No save found — will create on first change');
+        return;
+      }
+
+      const resp = await gapi.client.drive.files.get({
+        fileId: driveFileId,
+        alt: 'media',
+      });
+
+      const data = typeof resp.result === 'string' ? JSON.parse(resp.result) : resp.result;
+      if (data.dob) {
+        dob = new Date(data.dob + 'T00:00:00');
+        document.getElementById('dobInput').value = data.dob;
+        showDOBDisplay();
+      }
+      if (data.events) events = data.events;
+
+      // Also update localStorage
+      localStorage.setItem('mementoMori', JSON.stringify({
+        dob: data.dob || null, events
+      }));
+
+      if (dob) render();
+      setSyncStatus('connected', 'Loaded from Drive · ' + new Date().toLocaleTimeString());
+    } catch (e) {
+      setSyncStatus('error', 'Could not load from Drive');
+    }
+  }
+
+  async function saveToDrive() {
+    if (!accessToken) return;
+
+    const payload = JSON.stringify({
+      dob: dob ? dob.toISOString().split('T')[0] : null,
+      events
+    });
+
+    setSyncStatus('syncing', 'Saving to Drive…');
+    try {
+      if (driveFileId) {
+        // Update existing file
+        await fetch(`https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': 'Bearer ' + accessToken,
+            'Content-Type': 'application/json',
+          },
+          body: payload,
+        });
+      } else {
+        // Create new file in appDataFolder
+        const metadata = {
+          name: SAVE_FILENAME,
+          parents: ['appDataFolder'],
+        };
+        const form = new FormData();
+        form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+        form.append('file', new Blob([payload], { type: 'application/json' }));
+
+        const resp = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + accessToken },
+          body: form,
+        });
+        const result = await resp.json();
+        driveFileId = result.id;
+      }
+      setSyncStatus('connected', 'Saved to Drive · ' + new Date().toLocaleTimeString());
+    } catch (e) {
+      setSyncStatus('error', 'Drive save failed');
+    }
+  }
+
+  // Debounced cloud save — waits 2s after the last change
+  function scheduleDriveSave() {
+    if (!accessToken) return;
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(saveToDrive, 2000);
+  }
+
+  // Manual "Save Now" button
+  async function forceSaveToCloud() {
+    clearTimeout(saveTimeout);
+    await saveToDrive();
+  }
+
+  function saveState() {
+    // Always save to localStorage immediately
+    try {
+      localStorage.setItem('mementoMori', JSON.stringify({
+        dob: dob ? dob.toISOString().split('T')[0] : null,
+        events
+      }));
+    } catch (e) {
+      setSyncStatus('error', 'localStorage full or unavailable');
+      return;
+    }
+
+    // Debounced save to Drive if signed in
+    if (accessToken) {
+      scheduleDriveSave();
+    } else {
+      setSyncStatus('connected', 'Saved locally · ' + new Date().toLocaleTimeString());
+    }
+  }
+
+  // Load Google libs — called by the async script tags
+  window.addEventListener('load', () => {
+    if (typeof gapi !== 'undefined') onGapiLoaded();
+    else {
+      const gapiScript = document.querySelector('script[src*="apis.google.com"]');
+      if (gapiScript) gapiScript.onload = onGapiLoaded;
+    }
+    if (typeof google !== 'undefined' && google.accounts) onGisLoaded();
+    else {
+      const gisScript = document.querySelector('script[src*="accounts.google.com"]');
+      if (gisScript) gisScript.onload = onGisLoaded;
+    }
+  });
+
+  // ── Init ────────────────────────────────────────────────────
+  document.getElementById('modalOverlay').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('modalOverlay')) closeModal();
+  });
+
+  document.getElementById('dobInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') setDOB();
+  });
+
+  loadState();
+</script>
+</body>
+</html>
